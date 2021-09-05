@@ -7,6 +7,10 @@ import datetime
 
 
 def combine_seperated_data(data):
+    '''
+    Function to combine the position information into one string and if the
+    champion has more than one name combine the name into one string.
+    '''
     first_index = 0
     last_index = 0
     for index, x in enumerate(data):
@@ -23,6 +27,10 @@ def combine_seperated_data(data):
 
 
 def get_lane_data(lane):
+    '''
+    Function to get data for the top 5 champions in the selected lane and
+    combine items to have an easily parseable list.
+    '''
     all_lane_data = soup.select('.champion-trend-tier-'+lane.upper()+' > tr')
     top5_lane_data = all_lane_data[:5]
     top5_lane_text = []
@@ -34,6 +42,9 @@ def get_lane_data(lane):
 
 
 def get_catagory_list(champion_list, index):
+    '''
+    Function to create a list of items to be added to a dataframe
+    '''
     catagory_list = []
     for champion in champion_list:
         catagory_list.append(champion[index])
@@ -41,6 +52,10 @@ def get_catagory_list(champion_list, index):
 
 
 def create_lane_df(lane):
+    '''
+    Function to create a dataframe with the rank, name, win rate and play rate
+    for each champion in the selected lane.
+    '''
     lane_data = get_lane_data(lane)
     lane_df = pd.DataFrame()
     lane_df['Rank'] = get_catagory_list(lane_data, 0)
@@ -54,6 +69,7 @@ if __name__ == '__main__':
     res = requests.get('https://euw.op.gg/champion/statistics')
     soup = bs4.BeautifulSoup(res.text, "lxml")
 
+    # creating the dataframes for each role
     top_df = create_lane_df('top')
     jgl_df = create_lane_df('jungle')
     mid_df = create_lane_df('mid')
@@ -61,7 +77,7 @@ if __name__ == '__main__':
     sup_df = create_lane_df('support')
 
     todays_date = datetime.date.today()
-
+    # generating the PDF using cells to move around on the document
     pdf = FPDF()
     pdf.add_page()
     pdf.set_xy(0, 0)
@@ -70,7 +86,7 @@ if __name__ == '__main__':
     pdf.cell(75, 10, f"Op.gg report for rankings on {todays_date}", 0, 2, 'C')
     pdf.cell(90, 10, " ", 0, 2, 'C')
     pdf.cell(-40)
-    # top lane table
+    # Top lane table
     pdf.cell(75, 10, "Top lane", 0, 2)
     pdf.cell(20, 10, 'Rank', 1, 0, 'C')
     pdf.cell(40, 10, 'Name', 1, 0, 'C')
@@ -84,7 +100,7 @@ if __name__ == '__main__':
         pdf.cell(30, 10, f'{top_df["Win Rate"].iloc[i]}', 1, 0, 'C')
         pdf.cell(30, 10, f'{top_df["Play Rate"].iloc[i]}', 1, 2, 'C')
         pdf.cell(-90)
-    # mid
+    # Mid lane table
     pdf.set_font('arial', 'BU', 12)
     pdf.cell(90, 10, " ", 0, 2, 'C')
     pdf.cell(75, 10, "Mid lane", 0, 2)
@@ -100,7 +116,7 @@ if __name__ == '__main__':
         pdf.cell(30, 10, f'{mid_df["Win Rate"].iloc[i]}', 1, 0, 'C')
         pdf.cell(30, 10, f'{mid_df["Play Rate"].iloc[i]}', 1, 2, 'C')
         pdf.cell(-90)
-    # jgl
+    # Jungle table
     pdf.set_font('arial', 'BU', 12)
     pdf.cell(90, 10, " ", 0, 2, 'C')
     pdf.cell(75, 10, "Jungle", 0, 2)
@@ -119,7 +135,7 @@ if __name__ == '__main__':
     pdf.add_page()
     pdf.cell(90, 10, " ", 0, 2, 'C')
     pdf.cell(10)
-    # bot
+    # Bot lane table
     pdf.set_font('arial', 'BU', 12)
     pdf.cell(75, 10, "Bot lane", 0, 2)
     pdf.cell(20, 10, 'Rank', 1, 0, 'C')
@@ -134,7 +150,7 @@ if __name__ == '__main__':
         pdf.cell(30, 10, f'{bot_df["Win Rate"].iloc[i]}', 1, 0, 'C')
         pdf.cell(30, 10, f'{bot_df["Play Rate"].iloc[i]}', 1, 2, 'C')
         pdf.cell(-90)
-    # Support
+    # Support table
     pdf.set_font('arial', 'BU', 12)
     pdf.cell(90, 10, " ", 0, 2, 'C')
     pdf.cell(75, 10, "Support", 0, 2)
@@ -150,4 +166,5 @@ if __name__ == '__main__':
         pdf.cell(30, 10, f'{sup_df["Win Rate"].iloc[i]}', 1, 0, 'C')
         pdf.cell(30, 10, f'{sup_df["Play Rate"].iloc[i]}', 1, 2, 'C')
         pdf.cell(-90)
+    # outputting the PDF
     pdf.output(f'op.gg {todays_date}.pdf', 'F')
